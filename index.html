@@ -66,47 +66,55 @@
     </video>
 
     <script>
-        const overlay = document.getElementById('start-overlay');
-        const video = document.getElementById('main-video');
-        let isStarted = false;
+    const overlay = document.getElementById('start-overlay');
+    const video = document.getElementById('main-video');
+    let isStarted = false;
 
-        function startPlayback(e) {
-            if (isStarted) return;
-            isStarted = true;
+    function enableFullScreen() {
+        const docEl = document.documentElement;
 
-            video.muted = false;
-            video.volume = 1.0;
-
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    overlay.style.display = 'none';
-                    enableFullScreen();
-                }).catch(error => {
-                    video.muted = true;
-                    video.play();
-                    overlay.style.display = 'none';
-                });
-            }
+        if (docEl.requestFullscreen) {
+            docEl.requestFullscreen().catch(() => {});
+        } else if (docEl.webkitRequestFullscreen) { // Chrome / Safari Desktop
+            docEl.webkitRequestFullscreen();
+        } 
+        
+        if (video.webkitEnterFullscreen) {
+            try {
+                video.webkitEnterFullscreen();
+            } catch(e) {}
         }
+    }
 
-        function enableFullScreen() {
-            const docEl = document.documentElement;
-            if (docEl.requestFullscreen) {
-                docEl.requestFullscreen().catch(() => {});
-            } else if (docEl.webkitRequestFullscreen) {
-                docEl.webkitRequestFullscreen();
-            }
+    function startPlayback(e) {
+        if (isStarted) return;
+        isStarted = true;
+        enableFullScreen();
+
+        video.muted = false;
+        video.volume = 1.0;
+
+        overlay.style.display = 'none';
+
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+            }).catch(error => {
+                video.muted = true;
+                video.play();
+            });
         }
+    }
 
-        overlay.addEventListener('pointerdown', startPlayback, { once: true });
+    overlay.addEventListener('click', startPlayback, { once: true });
+    overlay.addEventListener('touchend', startPlayback, { once: true });
 
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.addEventListener('keydown', event => {
-            if (event.ctrlKey && (event.key === 'u' || event.key === 's')) {
-                event.preventDefault();
-            }
-        });
-    </script>
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', event => {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 's')) {
+            event.preventDefault();
+        }
+    });
+</script>
 </body>
 </html>
