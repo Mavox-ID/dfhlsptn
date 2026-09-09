@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, unavailable_after: 1-Jan-2099">
-    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
     <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet">
     <meta name="yandex" content="noindex, nofollow">
     <title>DFHLSPTN</title>
@@ -24,6 +24,7 @@
         html, body {
             width: 100%;
             height: 100%;
+            height: 100dvh;
             background-color: #000000;
             overflow: hidden;
             position: fixed;
@@ -33,25 +34,26 @@
         }
 
         #start-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             background-color: #000000;
             z-index: 9999;
             cursor: pointer;
         }
 
         #main-video {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
             object-fit: cover;
             object-position: center;
-            display: none;
             z-index: 1;
         }
     </style>
@@ -59,45 +61,46 @@
 <body>
 
     <div id="start-overlay"></div>
-    <video id="main-video" loop playsinline preload="auto">
+    <video id="main-video" loop playsinline webkit-playsinline preload="auto" muted>
         <source src="video.mp4" type="video/mp4">
     </video>
 
     <script>
         const overlay = document.getElementById('start-overlay');
         const video = document.getElementById('main-video');
+        let isStarted = false;
 
-        function enableFullScreen() {
-            const docEl = document.documentElement;
-            if (docEl.requestFullscreen) {
-                docEl.requestFullscreen().catch(() => {});
-            } else if (docEl.webkitRequestFullscreen) { /* Safari / iOS */
-                docEl.webkitRequestFullscreen();
-            } else if (docEl.msRequestFullscreen) { /* IE11 */
-                docEl.msRequestFullscreen();
-            }
-        }
+        function startPlayback(e) {
+            if (isStarted) return;
+            isStarted = true;
 
-        function startPlayback() {
-            enableFullScreen();
-            video.style.display = 'block';
             video.muted = false;
             video.volume = 1.0;
 
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
+                    overlay.style.display = 'none';
+                    enableFullScreen();
                 }).catch(error => {
+                    video.muted = true;
+                    video.play();
+                    overlay.style.display = 'none';
                 });
             }
-
-            overlay.style.display = 'none';
-            document.removeEventListener('click', startPlayback);
-            document.removeEventListener('touchstart', startPlayback);
         }
 
-        document.addEventListener('click', startPlayback, { once: true });
-        document.addEventListener('touchstart', startPlayback, { once: true });
+        function enableFullScreen() {
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(() => {});
+            } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen();
+            }
+        }
+
+        overlay.addEventListener('pointerdown', startPlayback, { once: true });
+
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('keydown', event => {
             if (event.ctrlKey && (event.key === 'u' || event.key === 's')) {
